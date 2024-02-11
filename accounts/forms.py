@@ -16,11 +16,10 @@ class UserRegistrationForm(UserCreationForm):
         model = User
         fields = ['username', 'password1', 'password2', 'first_name', 'last_name', 'email', 'account_type', 'birth_date','gender', 'postal_code', 'city','country', 'street_address']
         
-        # form.save()
     def save(self, commit=True):
-        our_user = super().save(commit=False) # ami database e data save korbo na ekhn
+        our_user = super().save(commit=False)
         if commit == True:
-            our_user.save() # user model e data save korlam
+            our_user.save()
             account_type = self.cleaned_data.get('account_type')
             gender = self.cleaned_data.get('gender')
             postal_code = self.cleaned_data.get('postal_code')

@@ -14,10 +14,8 @@ class UserRegistrationView(FormView):
     success_url = reverse_lazy('profile')
     
     def form_valid(self, form):
-        # print(form.cleaned_data)
         user = form.save()
         login(self.request, user)
-        print(user)
         return super().form_valid(form)
     
 class UserLoginView(LoginView):
@@ -43,5 +41,5 @@ class UserBankAccountUpdateView(View):
         form = UserUpdateForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect('profile')  # Redirect to the user's profile page
+            return redirect('profile')
         return render(request, self.template_name, {'form': form})
