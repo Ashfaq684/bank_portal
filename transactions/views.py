@@ -49,9 +49,6 @@ class DepositMoneyView(TransactionCreateMixin):
     def form_valid(self, form):
         amount = form.cleaned_data.get('amount')
         account = self.request.user.account
-        # if not account.initial_deposit_date:
-        #     now = timezone.now()
-        #     account.initial_deposit_date = now
         account.balance += amount
         account.save(
             update_fields=[
@@ -85,7 +82,7 @@ class WithdrawMoneyView(TransactionCreateMixin):
             self.request,
             f'Successfully withdrawn {"{:,.2f}".format(float(amount))}$ from your account'
         )
-
+        
         return super().form_valid(form)
 
 class LoanRequestView(TransactionCreateMixin):
@@ -98,8 +95,8 @@ class LoanRequestView(TransactionCreateMixin):
 
     def form_valid(self, form):
         amount = form.cleaned_data.get('amount')
-        current_loan_count = Transaction.objects.filter(
-            account=self.request.user.account,transaction_type=3,loan_approve=True).count()
+        current_loan_count = Transaction.objects.filter(account=self.request.user.account,transaction_type=3,loan_approve=True).count()
+        
         if current_loan_count >= 3:
             return HttpResponse("You have cross the loan limits")
         messages.success(
@@ -108,11 +105,12 @@ class LoanRequestView(TransactionCreateMixin):
         )
 
         return super().form_valid(form)
+
     
 class TransactionReportView(LoginRequiredMixin, ListView):
     template_name = 'transactions/transaction_report.html'
     model = Transaction
-    balance = 0 # filter korar pore ba age amar total balance ke show korbe
+    balance = 0
     
     def get_queryset(self):
         queryset = super().get_queryset().filter(
@@ -132,7 +130,7 @@ class TransactionReportView(LoginRequiredMixin, ListView):
         else:
             self.balance = self.request.user.account.balance
        
-        return queryset.distinct() # unique queryset hote hobe
+        return queryset.distinct()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -146,12 +144,8 @@ class TransactionReportView(LoginRequiredMixin, ListView):
 class PayLoanView(LoginRequiredMixin, View):
     def get(self, request, loan_id):
         loan = get_object_or_404(Transaction, id=loan_id)
-        print(loan)
         if loan.loan_approve:
             user_account = loan.account
-                # Reduce the loan amount from the user's balance
-                # 5000, 500 + 5000 = 5500
-                # balance = 3000, loan = 5000
             if loan.amount < user_account.balance:
                 user_account.balance -= loan.amount
                 loan.balance_after_transaction = user_account.balance
@@ -169,13 +163,12 @@ class PayLoanView(LoginRequiredMixin, View):
         return redirect('loan_list')
 
 
-class LoanListView(LoginRequiredMixin,ListView):
+class LoanListView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = 'transactions/loan_request.html'
-    context_object_name = 'loans' # loan list ta ei loans context er moddhe thakbe
+    context_object_name = 'loans'
     
     def get_queryset(self):
         user_account = self.request.user.account
         queryset = Transaction.objects.filter(account=user_account,transaction_type=3)
-        print(queryset)
         return queryset
